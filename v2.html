@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"></head>
+<body>
+<pre id="log"></pre>
+<script>
+var API="https://lab.eqst.co.kr:8406";
+var o=document.getElementById("log");
+function log(m){o.textContent+=m+"\n";}
+function rn(msg){
+  try{window.ReactNativeWebView.postMessage(JSON.stringify(msg));}catch(x){}
+}
+
+log("loaded");
+
+window.addEventListener("eqstpay:scn01:ticket",function(e){
+  var t=e.detail&&e.detail.ticket;
+  if(!t)return;
+  log("ticket="+t);
+  rn({channel:"WEB_SESSION",action:"EXCHANGE",ticket:t});
+});
+
+window.addEventListener("eqstpay:scn01:session",function(e){
+  var d=e.detail||{};
+  var sid=d.sessionId;
+  log("session="+sid);
+
+  fetch(API+"/api/v1/scenario01/web/sessions/"+sid+"/actions",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({action:"REPORT_READ"})
+  })
+  .then(function(r){return r.json();})
+  .then(function(data){
+    log("report="+JSON.stringify(data));
+    var bal=data.balance;
+    if(bal===undefined&&data.data){bal=data.data.balance;}
+    if(bal===undefined&&data.report){bal=data.report.balance;}
+    log("balance="+bal);
+  })
+  .catch(function(err){
+    log("fetch-error="+err.message);
+  });
+});
+</script>
+</body>
+</html>
