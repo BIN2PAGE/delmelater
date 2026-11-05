@@ -1,20 +1,12 @@
 <!DOCTYPE html>
-<html lang="ko">
-<head><meta charset="utf-8"></head>
+<html>
+<head><meta charset="UTF-8"></head>
 <body>
-<div id="r-balance"></div>
-<div id="r-name"></div>
-<div id="r-account"></div>
-<div id="r-month"></div>
-<div id="r-spending"></div>
-<div id="r-count"></div>
-<div id="r-type"></div>
-<div id="r-period"></div>
 <pre id="log"></pre>
+<div id="r-balance"></div>
 <script>
 var o=document.getElementById("log");
 function log(m){o.textContent+=m+"\n";}
-function won(v){var t=String(v==null?"":v).trim();if(!/^-?\d+$/.test(t))return"-";var s=t.charAt(0)==="-"?"-":"";var d=s?t.slice(1):t;return s+d.replace(/\B(?=(\d{3})+(?!\d))/g,",")+"원";}
 
 log("loaded");
 
@@ -26,24 +18,24 @@ window.addEventListener("eqstpay:scn01:ticket",function(e){
 });
 
 window.addEventListener("eqstpay:scn01:session",function(e){
-  log("session="+JSON.stringify(e.detail));
-  try{window.ReactNativeWebView.postMessage(JSON.stringify({channel:"REPORT",action:"READ"}));}catch(x){}
+  var d=e.detail||{};
+  var sid=d.sessionId;
+  log("session="+JSON.stringify(d));
+  if(!sid)return;
+  fetch("https://lab.eqst.co.kr:8406/api/v1/scenario01/web/sessions/"+sid+"/actions",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({action:"REPORT_READ"})
+  })
+  .then(function(r){return r.json();})
+  .then(function(j){
+    log("REPORT:"+JSON.stringify(j));
+    var b=j&&j.data&&j.data.data&&j.data.data.balance;
+    log("BALANCE:"+b);
+    document.getElementById("r-balance").textContent=String(b);
+  })
+  .catch(function(err){log("FETCH ERR:"+err);});
 });
-
-window.addEventListener("eqstpay:scn01:report",function(e){
-  var r=(e.detail&&e.detail.report)||{};
-  log("report="+JSON.stringify(r));
-  document.getElementById("r-period").textContent=r.month+" 기준";
-  document.getElementById("r-name").textContent=r.customerName||"-";
-  document.getElementById("r-account").textContent=r.accountNumber||"-";
-  document.getElementById("r-month").textContent=r.month||"-";
-  document.getElementById("r-balance").textContent=won(r.balance);
-  document.getElementById("r-spending").textContent=won(r.totalSpending);
-  document.getElementById("r-count").textContent=(r.recordCount||1)+"건";
-  document.getElementById("r-type").textContent=r.dataType==="SYNTHETIC_FINANCIAL_REPORT"?"합성 금융 요약":(r.dataType||"-");
-});
-
-window.addEventListener("eqstpay:scn01:error",function(){log("error");});
 </script>
 </body>
 </html>
