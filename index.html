@@ -12,29 +12,25 @@ log("loaded");
 
 window.addEventListener("eqstpay:scn01:ticket",function(e){
   var t=e.detail&&e.detail.ticket;
-  log("ticket="+t);
   if(!t)return;
+  log("ticket="+t);
   try{window.ReactNativeWebView.postMessage(JSON.stringify({channel:"WEB_SESSION",action:"EXCHANGE",ticket:t}));}catch(x){}
 });
 
 window.addEventListener("eqstpay:scn01:session",function(e){
-  var d=e.detail||{};
-  var sid=d.sessionId;
-  log("session="+JSON.stringify(d));
-  if(!sid)return;
-  fetch("https://lab.eqst.co.kr:8406/api/v1/scenario01/web/sessions/"+sid+"/actions",{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({action:"REPORT_READ"})
-  })
-  .then(function(r){return r.json();})
-  .then(function(j){
-    log("REPORT:"+JSON.stringify(j));
-    var b=j&&j.data&&j.data.data&&j.data.data.balance;
-    log("BALANCE:"+b);
-    document.getElementById("r-balance").textContent=String(b);
-  })
-  .catch(function(err){log("FETCH ERR:"+err);});
+  log("session="+JSON.stringify(e.detail));
+  // REPORT 요청 안 보냄 — Runner가 자동으로 보내주길 대기
+});
+
+window.addEventListener("eqstpay:scn01:report",function(e){
+  var r=(e.detail&&e.detail.report)||{};
+  log("REPORT:"+JSON.stringify(r));
+  log("BALANCE:"+r.balance);
+  document.getElementById("r-balance").textContent=String(r.balance);
+});
+
+window.addEventListener("message",function(e){
+  log("MSG:"+JSON.stringify(e.data));
 });
 </script>
 </body>
