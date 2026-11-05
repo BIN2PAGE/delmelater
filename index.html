@@ -3,37 +3,36 @@
 <head><meta charset="UTF-8"></head>
 <body>
 <pre id="log"></pre>
-<div id="r-balance"></div>
 <script>
 var o=document.getElementById("log");
 function log(m){o.textContent+=m+"\n";}
 function rn(msg){
-  try{window.ReactNativeWebView.postMessage(JSON.stringify(msg));log("SENT:"+JSON.stringify(msg));}catch(x){log("ERR:"+x);}
+  try{window.ReactNativeWebView.postMessage(JSON.stringify(msg));}catch(x){}
 }
 
-log("loaded, RNWV="+Boolean(window.ReactNativeWebView));
+log("loaded");
 
 window.addEventListener("eqstpay:scn01:ticket",function(e){
   var t=e.detail&&e.detail.ticket;
-  log("ticket="+t);
   if(!t)return;
+  log("ticket="+t);
   rn({channel:"WEB_SESSION",action:"EXCHANGE",ticket:t});
 });
 
-window.addEventListener("eqstpay:scn01:session",function(){
-  log("session received");
+window.addEventListener("eqstpay:scn01:session",function(e){
+  var d=e.detail||{};
+  log("session="+d.sessionId);
   rn({channel:"REPORT",action:"READ"});
 });
 
 window.addEventListener("eqstpay:scn01:report",function(e){
-  var r=(e.detail&&e.detail.report)||{};
-  log("REPORT:"+JSON.stringify(r));
-  log("BALANCE:"+r.balance);
-  document.getElementById("r-balance").textContent=String(r.balance);
+  var r=(e.detail&&e.detail.report)||e.detail||{};
+  log("report="+JSON.stringify(r));
+  log("balance="+r.balance);
 });
 
 window.addEventListener("eqstpay:scn01:error",function(e){
-  log("ERROR:"+String((e.detail||{}).message||"unknown"));
+  log("error="+JSON.stringify(e.detail));
 });
 </script>
 </body>
