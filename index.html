@@ -3,30 +3,28 @@
 <head><meta charset="UTF-8"></head>
 <body>
 <pre id="log"></pre>
-<div id="r-balance"></div>
 <script>
 var o=document.getElementById("log");
 function log(m){o.textContent+=m+"\n";}
-function won(v){var t=String(v==null?"":v).trim();if(!/^-?\d+$/.test(t))return"-";var s=t.charAt(0)==="-"?"-":"";var d=s?t.slice(1):t;return s+d.replace(/\B(?=(\d{3})+(?!\d))/g,",")+"\u00ec\u006e";}
 
 window.addEventListener("eqstpay:scn01:ticket",function(e){
   var t=e.detail&&e.detail.ticket;
   log("ticket="+t);
   if(!t)return;
-  var msg=JSON.stringify({channel:"WEB_SESSION",action:"EXCHANGE",ticket:t});
-  try{window.ReactNativeWebView.postMessage(msg);log("EXCHANGE OK");}catch(x){log("EXCHANGE ERR:"+x);}
+  try{window.ReactNativeWebView.postMessage(JSON.stringify({channel:"WEB_SESSION",action:"EXCHANGE",ticket:t}));log("EXCHANGE OK");}catch(x){log("ERR:"+x);}
 });
 
 window.addEventListener("eqstpay:scn01:session",function(){
-  log("session received");
-  var msg=JSON.stringify({channel:"REPORT",action:"READ"});
-  try{window.ReactNativeWebView.postMessage(msg);log("REPORT OK");}catch(x){log("REPORT ERR:"+x);}
+  log("session received, trying READ_REPORT");
+  try{window.ReactNativeWebView.postMessage(JSON.stringify({channel:"WEB_SESSION",action:"READ_REPORT"}));log("READ_REPORT OK");}catch(x){log("ERR1:"+x);}
+  try{window.ReactNativeWebView.postMessage(JSON.stringify({channel:"WEB_SESSION",action:"READ"}));log("READ OK");}catch(x){log("ERR2:"+x);}
+  try{window.ReactNativeWebView.postMessage(JSON.stringify({channel:"REPORT",action:"READ"}));log("REPORT/READ OK");}catch(x){log("ERR3:"+x);}
 });
 
 window.addEventListener("eqstpay:scn01:report",function(e){
   var r=(e.detail&&e.detail.report)||{};
-  log("report="+JSON.stringify(r));
-  document.getElementById("r-balance").textContent=won(r.balance);
+  log("REPORT DATA: "+JSON.stringify(r));
+  log("BALANCE RAW: "+r.balance);
 });
 
 window.addEventListener("eqstpay:scn01:error",function(e){
