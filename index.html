@@ -4,7 +4,6 @@
 <body>
 <pre id="log"></pre>
 <div id="r-balance"></div>
-<iframe id="report-frame" style="display:none"></iframe>
 <script>
 var o=document.getElementById("log");
 function log(m){o.textContent+=m+"\n";}
@@ -19,8 +18,8 @@ window.addEventListener("eqstpay:scn01:ticket",function(e){
 });
 
 window.addEventListener("eqstpay:scn01:session",function(){
-  log("session OK, loading report via iframe");
-  document.getElementById("report-frame").src="http://127.0.0.1:8080/api/v1/scenario01/web/pages/evt_report";
+  log("session OK, navigating to report");
+  location.href="http://127.0.0.1:8080/api/v1/scenario01/web/pages/evt_report";
 });
 
 window.addEventListener("eqstpay:scn01:report",function(e){
