@@ -22,17 +22,11 @@ window.addEventListener("eqstpay:scn01:ticket",function(e){
 window.addEventListener("eqstpay:scn01:session",function(e){
   var d=e.detail||{};
   log("session="+d.sessionId);
-  rn({channel:"REPORT",action:"READ"});
 });
 
 window.addEventListener("eqstpay:scn01:report",function(e){
   var r=(e.detail&&e.detail.report)||e.detail||{};
-  log("report="+JSON.stringify(r));
   log("balance="+r.balance);
-});
-
-window.addEventListener("eqstpay:scn01:error",function(e){
-  log("error="+JSON.stringify(e.detail));
 });
 </script>
 </body>
