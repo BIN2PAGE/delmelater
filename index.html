@@ -9,9 +9,9 @@ function log(m){o.textContent+=m+"\n";}
 function rn(msg){
   try{window.ReactNativeWebView.postMessage(JSON.stringify(msg));}catch(x){}
 }
-
 log("loaded");
 
+// 1) ticket 수신 → EXCHANGE
 window.addEventListener("eqstpay:scn01:ticket",function(e){
   var t=e.detail&&e.detail.ticket;
   if(!t)return;
@@ -19,11 +19,20 @@ window.addEventListener("eqstpay:scn01:ticket",function(e){
   rn({channel:"WEB_SESSION",action:"EXCHANGE",ticket:t});
 });
 
+// 2) session 수신 → CONFIRM
 window.addEventListener("eqstpay:scn01:session",function(e){
   var d=e.detail||{};
   log("session="+d.sessionId);
+  rn({channel:"SESSION",action:"CONFIRM"});
 });
 
+// 3) confirm 수신 → READ
+window.addEventListener("eqstpay:scn01:confirm",function(e){
+  log("confirmed");
+  rn({channel:"REPORT",action:"READ"});
+});
+
+// 4) report 수신
 window.addEventListener("eqstpay:scn01:report",function(e){
   var r=(e.detail&&e.detail.report)||e.detail||{};
   log("balance="+r.balance);
