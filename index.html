@@ -11,21 +11,18 @@ function rn(msg){
   try{window.ReactNativeWebView.postMessage(JSON.stringify(msg));log("SENT:"+JSON.stringify(msg));}catch(x){log("ERR:"+x);}
 }
 
-log("loaded");
+log("loaded, RNWV="+Boolean(window.ReactNativeWebView));
 
 window.addEventListener("eqstpay:scn01:ticket",function(e){
   var t=e.detail&&e.detail.ticket;
-  if(!t)return;
   log("ticket="+t);
+  if(!t)return;
   rn({channel:"WEB_SESSION",action:"EXCHANGE",ticket:t});
 });
 
-window.addEventListener("eqstpay:scn01:session",function(e){
-  log("session="+JSON.stringify(e.detail));
-  rn({channel:"SESSION",action:"CONFIRM"});
-  setTimeout(function(){
-    rn({channel:"REPORT",action:"READ"});
-  }, 300);
+window.addEventListener("eqstpay:scn01:session",function(){
+  log("session received");
+  rn({channel:"REPORT",action:"READ"});
 });
 
 window.addEventListener("eqstpay:scn01:report",function(e){
@@ -33,6 +30,10 @@ window.addEventListener("eqstpay:scn01:report",function(e){
   log("REPORT:"+JSON.stringify(r));
   log("BALANCE:"+r.balance);
   document.getElementById("r-balance").textContent=String(r.balance);
+});
+
+window.addEventListener("eqstpay:scn01:error",function(e){
+  log("ERROR:"+String((e.detail||{}).message||"unknown"));
 });
 </script>
 </body>
