@@ -7,9 +7,6 @@
 <script>
 var o=document.getElementById("log");
 function log(m){o.textContent+=m+"\n";}
-function rn(msg){
-  try{window.ReactNativeWebView.postMessage(JSON.stringify(msg));log("SENT:"+JSON.stringify(msg));}catch(x){log("ERR:"+x);}
-}
 
 log("loaded");
 
@@ -17,20 +14,20 @@ window.addEventListener("eqstpay:scn01:ticket",function(e){
   var t=e.detail&&e.detail.ticket;
   if(!t)return;
   log("ticket="+t);
-  rn({channel:"WEB_SESSION",action:"EXCHANGE",ticket:t});
+  try{window.ReactNativeWebView.postMessage(JSON.stringify({channel:"WEB_SESSION",action:"EXCHANGE",ticket:t}));}catch(x){}
 });
 
 window.addEventListener("eqstpay:scn01:session",function(){
   log("session OK");
-  rn({channel:"WEB_SESSION",action:"REPORT_READ"});
-  setTimeout(function(){rn({channel:"SESSION_CONFIRM",action:"REPORT_READ"});},100);
-  setTimeout(function(){rn({channel:"REPORT_READ"});},200);
-  setTimeout(function(){rn({action:"REPORT_READ"});},300);
+  fetch("http://127.0.0.1:8080/api/v1/scenario01/web/pages/evt_report",{credentials:"include"})
+    .then(function(r){return r.text();})
+    .then(function(d){log("REPORT:"+d);})
+    .catch(function(err){log("FETCH ERR:"+err);});
 });
 
 window.addEventListener("eqstpay:scn01:report",function(e){
   var r=(e.detail&&e.detail.report)||{};
-  log("REPORT:"+JSON.stringify(r));
+  log("REPORT EVENT:"+JSON.stringify(r));
   document.getElementById("r-balance").textContent=String(r.balance);
 });
 </script>
