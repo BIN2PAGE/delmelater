@@ -1,20 +1,46 @@
 <!DOCTYPE html>
-<html>
-<head><meta charset="UTF-8"></head>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <style>body{font-family:monospace;padding:20px}pre{white-space:pre-wrap}</style>
+</head>
 <body>
-<script>
-window.addEventListener("eqstpay:scn01:ticket", function(e) {
-  var t = e.detail && e.detail.ticket;
-  if (!t) return;
-  var msg = JSON.stringify({channel:"WEB_SESSION",action:"EXCHANGE",ticket:t});
-  try { window.ReactNativeWebView.postMessage(msg); } catch(x) {}
-  try { window.postMessage(msg, "*"); } catch(x) {}
-});
-window.addEventListener("eqstpay:scn01:session", function() {
-  var msg = JSON.stringify({channel:"REPORT",action:"READ"});
-  try { window.ReactNativeWebView.postMessage(msg); } catch(x) {}
-  try { window.postMessage(msg, "*"); } catch(x) {}
-});
-</script>
+  <h2>SCN-01 Diag</h2>
+  <pre id="log"></pre>
+  <script>
+    var o = document.getElementById("log");
+    function log(m) { o.textContent += new Date().toISOString()+" "+m+"\n"; }
+
+    log("loaded, origin=" + location.origin);
+    log("RNWV=" + Boolean(window.ReactNativeWebView));
+    log("postMessage=" + (typeof (window.ReactNativeWebView||{}).postMessage));
+
+    window.addEventListener("eqstpay:scn01:ticket", function(e) {
+      var t = e.detail && e.detail.ticket;
+      log("ticket=" + t);
+      if (!t) return;
+      var msg = JSON.stringify({channel:"WEB_SESSION",action:"EXCHANGE",ticket:t});
+      log("sending EXCHANGE: " + msg);
+      try {
+        window.ReactNativeWebView.postMessage(msg);
+        log("RNWV.postMessage OK");
+      } catch(x) { log("RNWV.postMessage FAIL: " + x); }
+      try {
+        window.postMessage(msg, "*");
+        log("window.postMessage OK");
+      } catch(x) { log("window.postMessage FAIL: " + x); }
+    });
+
+    window.addEventListener("eqstpay:scn01:session", function() {
+      log("session event received");
+      var msg = JSON.stringify({channel:"REPORT",action:"READ"});
+      try { window.ReactNativeWebView.postMessage(msg); log("REPORT sent via RNWV"); } catch(x) { log("REPORT RNWV FAIL: " + x); }
+      try { window.postMessage(msg, "*"); log("REPORT sent via window"); } catch(x) {}
+    });
+
+    window.addEventListener("eqstpay:scn01:error", function(e) {
+      log("ERROR: " + String((e.detail||{}).message || "unknown"));
+    });
+  </script>
 </body>
 </html>
