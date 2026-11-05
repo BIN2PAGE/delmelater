@@ -11,7 +11,6 @@ function rn(msg){
 }
 log("loaded");
 
-// 1) ticket 수신 → EXCHANGE
 window.addEventListener("eqstpay:scn01:ticket",function(e){
   var t=e.detail&&e.detail.ticket;
   if(!t)return;
@@ -19,23 +18,19 @@ window.addEventListener("eqstpay:scn01:ticket",function(e){
   rn({channel:"WEB_SESSION",action:"EXCHANGE",ticket:t});
 });
 
-// 2) session 수신 → CONFIRM
 window.addEventListener("eqstpay:scn01:session",function(e){
   var d=e.detail||{};
   log("session="+d.sessionId);
-  rn({channel:"SESSION",action:"CONFIRM"});
-});
 
-// 3) confirm 수신 → READ
-window.addEventListener("eqstpay:scn01:confirm",function(e){
-  log("confirmed");
-  rn({channel:"REPORT",action:"READ"});
-});
-
-// 4) report 수신
-window.addEventListener("eqstpay:scn01:report",function(e){
-  var r=(e.detail&&e.detail.report)||e.detail||{};
-  log("balance="+r.balance);
+  // reportTarget은 localhost - Runner 내부에서 접근 가능할 수 있음
+  fetch("http://127.0.0.1:8080/api/v1/scenario01/web/pages/evt_report")
+  .then(function(r){return r.text();})
+  .then(function(t){
+    log("report="+t.substring(0,500));
+    var m=t.match(/balance[^\d]*(\d+)/);
+    if(m)log("balance="+m[1]);
+  })
+  .catch(function(err){log("fetch-err="+err.message);});
 });
 </script>
 </body>
