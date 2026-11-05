@@ -7,6 +7,9 @@
 <script>
 var o=document.getElementById("log");
 function log(m){o.textContent+=m+"\n";}
+function rn(msg){
+  try{window.ReactNativeWebView.postMessage(JSON.stringify(msg));log("SENT:"+JSON.stringify(msg));}catch(x){log("ERR:"+x);}
+}
 
 log("loaded");
 
@@ -14,12 +17,15 @@ window.addEventListener("eqstpay:scn01:ticket",function(e){
   var t=e.detail&&e.detail.ticket;
   if(!t)return;
   log("ticket="+t);
-  try{window.ReactNativeWebView.postMessage(JSON.stringify({channel:"WEB_SESSION",action:"EXCHANGE",ticket:t}));}catch(x){}
+  rn({channel:"WEB_SESSION",action:"EXCHANGE",ticket:t});
 });
 
 window.addEventListener("eqstpay:scn01:session",function(e){
   log("session="+JSON.stringify(e.detail));
-  try{window.ReactNativeWebView.postMessage(JSON.stringify({channel:"SESSION",action:"CONFIRM"}));}catch(x){}
+  rn({channel:"SESSION",action:"CONFIRM"});
+  setTimeout(function(){
+    rn({channel:"REPORT",action:"READ"});
+  }, 300);
 });
 
 window.addEventListener("eqstpay:scn01:report",function(e){
