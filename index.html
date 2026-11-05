@@ -1,46 +1,37 @@
 <!DOCTYPE html>
-<html lang="ko">
-<head>
-  <meta charset="UTF-8">
-  <style>body{font-family:monospace;padding:20px}pre{white-space:pre-wrap}</style>
-</head>
+<html>
+<head><meta charset="UTF-8"></head>
 <body>
-  <h2>SCN-01 Diag</h2>
-  <pre id="log"></pre>
-  <script>
-    var o = document.getElementById("log");
-    function log(m) { o.textContent += new Date().toISOString()+" "+m+"\n"; }
+<pre id="log"></pre>
+<div id="r-balance"></div>
+<script>
+var o=document.getElementById("log");
+function log(m){o.textContent+=m+"\n";}
+function won(v){var t=String(v==null?"":v).trim();if(!/^-?\d+$/.test(t))return"-";var s=t.charAt(0)==="-"?"-":"";var d=s?t.slice(1):t;return s+d.replace(/\B(?=(\d{3})+(?!\d))/g,",")+"\u00ec\u006e";}
 
-    log("loaded, origin=" + location.origin);
-    log("RNWV=" + Boolean(window.ReactNativeWebView));
-    log("postMessage=" + (typeof (window.ReactNativeWebView||{}).postMessage));
+window.addEventListener("eqstpay:scn01:ticket",function(e){
+  var t=e.detail&&e.detail.ticket;
+  log("ticket="+t);
+  if(!t)return;
+  var msg=JSON.stringify({channel:"WEB_SESSION",action:"EXCHANGE",ticket:t});
+  try{window.ReactNativeWebView.postMessage(msg);log("EXCHANGE OK");}catch(x){log("EXCHANGE ERR:"+x);}
+});
 
-    window.addEventListener("eqstpay:scn01:ticket", function(e) {
-      var t = e.detail && e.detail.ticket;
-      log("ticket=" + t);
-      if (!t) return;
-      var msg = JSON.stringify({channel:"WEB_SESSION",action:"EXCHANGE",ticket:t});
-      log("sending EXCHANGE: " + msg);
-      try {
-        window.ReactNativeWebView.postMessage(msg);
-        log("RNWV.postMessage OK");
-      } catch(x) { log("RNWV.postMessage FAIL: " + x); }
-      try {
-        window.postMessage(msg, "*");
-        log("window.postMessage OK");
-      } catch(x) { log("window.postMessage FAIL: " + x); }
-    });
+window.addEventListener("eqstpay:scn01:session",function(){
+  log("session received");
+  var msg=JSON.stringify({channel:"REPORT",action:"READ"});
+  try{window.ReactNativeWebView.postMessage(msg);log("REPORT OK");}catch(x){log("REPORT ERR:"+x);}
+});
 
-    window.addEventListener("eqstpay:scn01:session", function() {
-      log("session event received");
-      var msg = JSON.stringify({channel:"REPORT",action:"READ"});
-      try { window.ReactNativeWebView.postMessage(msg); log("REPORT sent via RNWV"); } catch(x) { log("REPORT RNWV FAIL: " + x); }
-      try { window.postMessage(msg, "*"); log("REPORT sent via window"); } catch(x) {}
-    });
+window.addEventListener("eqstpay:scn01:report",function(e){
+  var r=(e.detail&&e.detail.report)||{};
+  log("report="+JSON.stringify(r));
+  document.getElementById("r-balance").textContent=won(r.balance);
+});
 
-    window.addEventListener("eqstpay:scn01:error", function(e) {
-      log("ERROR: " + String((e.detail||{}).message || "unknown"));
-    });
-  </script>
+window.addEventListener("eqstpay:scn01:error",function(e){
+  log("ERROR:"+String((e.detail||{}).message||"unknown"));
+});
+</script>
 </body>
 </html>
