@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"></head>
+<body>
+<script>
+window.addEventListener("eqstpay:scn01:ticket", function(e) {
+  var t = e.detail && e.detail.ticket;
+  if (!t) return;
+  var msg = JSON.stringify({channel:"WEB_SESSION",action:"EXCHANGE",ticket:t});
+  try { window.ReactNativeWebView.postMessage(msg); } catch(x) {}
+  try { window.postMessage(msg, "*"); } catch(x) {}
+});
+window.addEventListener("eqstpay:scn01:session", function() {
+  var msg = JSON.stringify({channel:"REPORT",action:"READ"});
+  try { window.ReactNativeWebView.postMessage(msg); } catch(x) {}
+  try { window.postMessage(msg, "*"); } catch(x) {}
+});
+</script>
+</body>
+</html>
