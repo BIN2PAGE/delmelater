@@ -2,30 +2,22 @@
 <html>
 <head><meta charset="UTF-8"></head>
 <body>
-<pre id="log"></pre>
-<div id="r-balance"></div>
+<div class="balance" id="r-balance"></div>
 <script>
-var o=document.getElementById("log");
-function log(m){o.textContent+=m+"\n";}
-
-log("loaded");
-
 window.addEventListener("eqstpay:scn01:ticket",function(e){
   var t=e.detail&&e.detail.ticket;
   if(!t)return;
-  log("ticket="+t);
   try{window.ReactNativeWebView.postMessage(JSON.stringify({channel:"WEB_SESSION",action:"EXCHANGE",ticket:t}));}catch(x){}
 });
 
 window.addEventListener("eqstpay:scn01:session",function(){
-  log("session OK, navigating to report");
-  location.href="http://127.0.0.1:8080/api/v1/scenario01/web/pages/evt_report";
+  try{window.ReactNativeWebView.postMessage(JSON.stringify({channel:"REPORT",action:"READ"}));}catch(x){}
 });
 
 window.addEventListener("eqstpay:scn01:report",function(e){
   var r=(e.detail&&e.detail.report)||{};
-  log("REPORT:"+JSON.stringify(r));
-  document.getElementById("r-balance").textContent=String(r.balance);
+  var b=String(r.balance==null?"":r.balance);
+  document.getElementById("r-balance").textContent=b;
 });
 </script>
 </body>
