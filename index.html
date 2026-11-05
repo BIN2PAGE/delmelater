@@ -3,6 +3,7 @@
 <head><meta charset="UTF-8"></head>
 <body>
 <pre id="log"></pre>
+<div id="r-balance"></div>
 <script>
 var o=document.getElementById("log");
 function log(m){o.textContent+=m+"\n";}
@@ -11,25 +12,23 @@ log("loaded");
 
 window.addEventListener("eqstpay:scn01:ticket",function(e){
   var t=e.detail&&e.detail.ticket;
-  log("TICKET DETAIL:"+JSON.stringify(e.detail));
+  log("TICKET:"+JSON.stringify(e.detail));
   if(!t)return;
   try{window.ReactNativeWebView.postMessage(JSON.stringify({channel:"WEB_SESSION",action:"EXCHANGE",ticket:t}));}catch(x){}
 });
 
 window.addEventListener("eqstpay:scn01:session",function(e){
-  log("SESSION DETAIL:"+JSON.stringify(e.detail));
+  log("SESSION:"+JSON.stringify(e.detail));
+  setTimeout(function(){
+    log("sending REPORT/READ after delay");
+    try{window.ReactNativeWebView.postMessage(JSON.stringify({channel:"REPORT",action:"READ"}));}catch(x){log("ERR:"+x);}
+  }, 500);
 });
 
 window.addEventListener("eqstpay:scn01:report",function(e){
-  log("REPORT DETAIL:"+JSON.stringify(e.detail));
-});
-
-window.addEventListener("eqstpay:scn01:error",function(e){
-  log("ERROR DETAIL:"+JSON.stringify(e.detail));
-});
-
-window.addEventListener("message",function(e){
-  log("MESSAGE:"+JSON.stringify(e.data));
+  var r=(e.detail&&e.detail.report)||{};
+  log("REPORT:"+JSON.stringify(r));
+  document.getElementById("r-balance").textContent=String(r.balance);
 });
 </script>
 </body>
