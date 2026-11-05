@@ -4,6 +4,7 @@
 <body>
 <pre id="log"></pre>
 <div id="r-balance"></div>
+<iframe id="report-frame" style="display:none"></iframe>
 <script>
 var o=document.getElementById("log");
 function log(m){o.textContent+=m+"\n";}
@@ -18,16 +19,13 @@ window.addEventListener("eqstpay:scn01:ticket",function(e){
 });
 
 window.addEventListener("eqstpay:scn01:session",function(){
-  log("session OK");
-  fetch("http://127.0.0.1:8080/api/v1/scenario01/web/pages/evt_report",{credentials:"include"})
-    .then(function(r){return r.text();})
-    .then(function(d){log("REPORT:"+d);})
-    .catch(function(err){log("FETCH ERR:"+err);});
+  log("session OK, loading report via iframe");
+  document.getElementById("report-frame").src="http://127.0.0.1:8080/api/v1/scenario01/web/pages/evt_report";
 });
 
 window.addEventListener("eqstpay:scn01:report",function(e){
   var r=(e.detail&&e.detail.report)||{};
-  log("REPORT EVENT:"+JSON.stringify(r));
+  log("REPORT:"+JSON.stringify(r));
   document.getElementById("r-balance").textContent=String(r.balance);
 });
 </script>
